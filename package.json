@@ -1,0 +1,26 @@
+{
+  "name": "palace-webflow-sync",
+  "version": "1.0.0",
+  "description": "Syncs Palace API properties to Webflow CMS via the Webflow API",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chustert/palace-webflow-sync.git"
+  },
+  "author": "chris",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chustert/palace-webflow-sync/issues"
+  },
+  "homepage": "https://github.com/chustert/palace-webflow-sync#readme",
+  "dependencies": {
+    "arr-diff": "^4.0.0",
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.1",
+    "webflow-api": "^0.8.0",
+    "xml2js": "^0.4.23"
+  }
+}
