@@ -8,6 +8,8 @@ dotenv.config({ path: './config.env' });
 const api_key = process.env.API_KEY;
 const palaceEmail = process.env.PALACE_LOGIN;
 const palacePass = process.env.PALACE_PASSWORD;
+const site_id = process.env.SITE_ID;
+const webflow_domain = process.env.WEBFLOW_DOMAIN;
 let collections_id = process.env.COLLECTION_ID;
 
 let itemCodetoDelete, itemPropCodeToDelete, listOfItems,itemsToDelete, name, propertyaddress1, propertyaddress2, propertyaddress3, propertyaddress4, propertycode;
@@ -49,7 +51,7 @@ const getPalaceListings = async () => {
         }
 
         //function that recursively invokes itself
-        (async function loopProperties() {
+        (async function loopProperties() { // Might have to add 'await' to make sure looping properties finishes before site gets published!
             for (const property of properties) {
                 uniquePalacePropertyCodes.push(property.PropertyCode);
     
@@ -75,8 +77,7 @@ const getPalaceListings = async () => {
             }
         })();
 
-        // Add function to publish site
-        // http://developers.webflow.com/#get-site
+        // publishToSite()
         
     } catch (err) {
         console.log(`Error - Problem loading listing: ${err}`); 
@@ -216,7 +217,19 @@ function deleteItem() {
     .then(res => {
       console.log(`Delete item ${itemPropCodeToDelete} - STOPPED`);
     });
-  }
+}
+
+// Publishing data to process.env.WEBFLOW_DOMAIN
+function publishToSite() {
+    webflow.publishSite({
+        siteId: site_id,
+        domains: [webflow_domain]
+    })
+    .then(res => {
+        console.log(`Published site to ${webflow_domain}!`);
+      }); 
+}
 
 
-  getPalaceListings();
+getPalaceListings();
+
