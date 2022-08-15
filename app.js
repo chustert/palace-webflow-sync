@@ -22,7 +22,7 @@ const webflow = new Webflow({
 
 const getPalaceListings = async () => {
     try {
-        const response = await axios.get('https://api.getpalace.com/Service.svc/RestService/v2ViewAllDetailedProperty/JSON', {
+        const response = await axios.get('https://api.getpalace.com/Service.svc/RestService/v2AvailableProperties/JSON', {
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -43,7 +43,14 @@ const getPalaceListings = async () => {
         console.log('****************************');
         console.log(' ');
         console.log(`Properties.Length: ${properties.length}`);
+        
+
+        for (const property of properties) {
+            uniquePalacePropertyCodes.push(property.PropertyCode); // NOTE: This needs to be outside of this for loop as it doubles everything up. Should be in its own foor loop, going through it only once!
+        }
+        console.log(`Palace Property Codes: ${uniquePalacePropertyCodes}`);
         console.log(' ');
+
 
         //Simple sleep function to get around the API call restrictions in Webflow
         function sleep(ms) {
@@ -52,8 +59,8 @@ const getPalaceListings = async () => {
 
         //function that recursively invokes itself
         (async function loopProperties() { // Might have to add 'await' to make sure looping properties finishes before site gets published!
-            for (const property of properties) {
-                uniquePalacePropertyCodes.push(property.PropertyCode);
+            for (property of properties) {
+                // uniquePalacePropertyCodes.push(property.PropertyCode); // NOTE: This needs to be outside of this for loop as it doubles everything up. Should be in its own foor loop, going through it only once!
     
                 propertycode        = property.PropertyCode
                 propertyaddress1    = property.PropertyAddress1;
@@ -61,8 +68,8 @@ const getPalaceListings = async () => {
                 propertyaddress3    = property.PropertyAddress3;
                 propertyaddress4    = property.PropertyAddress4;
                 name = `${propertyaddress1} ${propertyaddress2} ${propertyaddress3} ${propertyaddress4}`;
+                console.log(`Property Code: ${property.PropertyCode}`);
                 console.log(`Name: ${name}`);
-                console.log(`Property Code: ${property.PropertyCode}, Address: ${property.PropertyAddress1 + " " + property.PropertyAddress2}`);
     
                 await getImages(propertycode)
                 .then(imgArr => {
@@ -86,7 +93,7 @@ const getPalaceListings = async () => {
 };
 
 function getImages(code) {
-    console.log(`Property Code for Image: ${code}`);
+    //console.log(`Property Code for Image: ${code}`);
     return axios.get('https://api.getpalace.com/Service.svc/RestService/v2AvailablePropertyImagesURL/JSON/' + code, {
         headers: {
             'Content-Type': 'application/json'
@@ -104,9 +111,9 @@ function getImages(code) {
         for (const image of imagesArray) {
             propertyImages.push(image.PropertyImageURL);
         }
-        console.log(`getImages() Array: ${propertyImages}`);
         console.log(`getImages() Array Length: ${propertyImages.length}`);
         console.log(`getImages() Array First Element: ${propertyImages[0]}`);
+        //console.log(`getImages() Array: ${propertyImages}`);
         return propertyImages;
     })
     .catch((err) => {
@@ -126,9 +133,9 @@ async function pullData() {
         }
         console.log(`Unique Webflow Property Codes: ${uniqueWebflowPropertyCodes}`);
         console.log(`Palace Property Code to be imported: ${propertycode}`);
-        console.log(`Palace Property Image: ${propertyimageArray[0]}`);
-        console.log(`Palace Property Image Array: ${propertyimageArray}`);
-        console.log(`Palace Property Image Array Length: ${propertyimageArray.length}`);
+        //console.log(`Palace Property Image: ${propertyimageArray[0]}`);
+        //console.log(`Palace Property Image Array: ${propertyimageArray}`);
+        //console.log(`Palace Property Image Array Length: ${propertyimageArray.length}`);
         if (uniqueWebflowPropertyCodes.includes(propertycode)) {
             console.log("Property exists already - STOP");
         } else {
@@ -141,6 +148,7 @@ async function pullData() {
 
 function create() {
     try {
+        // Creates an array of image objects for the property image gallery
         function createJsonArray() {
             const jsonArray = [];
 
@@ -169,7 +177,7 @@ function create() {
                 'propertyimage': {
                     'url': propertyimageArray[0]
                 },
-                'propertyimages-2': createJsonArray(),
+                'propertyimages': createJsonArray(),
                 // [
                     // {
                     //     'url': 'http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000021.jpg'
