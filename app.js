@@ -12,7 +12,7 @@ const site_id = process.env.SITE_ID;
 const webflow_domain = process.env.WEBFLOW_DOMAIN;
 let collections_id = process.env.COLLECTION_ID;
 
-let itemCodetoDelete, itemPropCodeToDelete, listOfItems,itemsToDelete, name, propertyaddress1, propertyaddress2, propertyaddress3, propertyaddress4, propertycode;
+let itemCodetoDelete, itemPropCodeToDelete, listOfItems, itemToDelete, itemsToDelete, name, propertyaddress1, propertyaddress2, propertyaddress3, propertyaddress4, propertycode;
 let uniqueWebflowPropertyCodes = [];
 let uniquePalacePropertyCodes = [];
 
@@ -51,6 +51,8 @@ const getPalaceListings = async () => {
         console.log(`Palace Property Codes: ${uniquePalacePropertyCodes}`);
         console.log(' ');
 
+        await pullData();
+
 
         //Simple sleep function to get around the API call restrictions in Webflow
         function sleep(ms) {
@@ -76,7 +78,7 @@ const getPalaceListings = async () => {
                     propertyimageArray = imgArr;
                 });
                 
-                await pullData();
+                await create();
 
                 //call sleep function from above (might have to increase timer)
                 await sleep(5000);
@@ -132,69 +134,11 @@ async function pullData() {
             uniqueWebflowPropertyCodes.push(listOfItems[i].propertycode);
         }
         console.log(`Unique Webflow Property Codes: ${uniqueWebflowPropertyCodes}`);
-        console.log(`Palace Property Code to be imported: ${propertycode}`);
-        //console.log(`Palace Property Image: ${propertyimageArray[0]}`);
-        //console.log(`Palace Property Image Array: ${propertyimageArray}`);
-        //console.log(`Palace Property Image Array Length: ${propertyimageArray.length}`);
-        if (uniqueWebflowPropertyCodes.includes(propertycode)) {
-            console.log("Property exists already - STOP");
-        } else {
-            create();
-        }
+
         //Checking to see if there is anything inside webflow thats not inside Palace to delete
         checkLiveItems();
     });
 };
-
-function create() {
-    try {
-        // Creates an array of image objects for the property image gallery
-        function createJsonArray() {
-            const jsonArray = [];
-
-            propertyimageArray.forEach(el => {
-                string = '{ "url": "' + el + '" }';
-                obj = JSON.parse(string);
-                jsonArray.push(obj);
-            });
-            //console.log(jsonArray);
-            // Output:
-            // [
-            //     { 'url': 'http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000084.jpg' }
-            // ]
-            return jsonArray;
-        }
-
-        webflow.createItem({
-            collectionId: collections_id,
-            fields: {
-                'name': name,
-                'propertycode': propertycode,
-                'propertyaddress1': propertyaddress1,
-                'propertyaddress2': propertyaddress2,
-                'propertyaddress3': propertyaddress4,
-                'propertyaddress4': propertyaddress4,
-                'propertyimage': {
-                    'url': propertyimageArray[0]
-                },
-                'propertyimages': createJsonArray(),
-                // [
-                    // {
-                    //     'url': 'http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000021.jpg'
-                    // },
-                    // {
-                    //     'url': "http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000066.jpg"
-                    // }
-                // ],
-                '_archived': false,
-                '_draft': false,
-            },
-        });
-        console.log(`Created item ${name}`);
-    } catch (err) {
-        console.log(`Error - Problem creating listing: ${err}`); 
-    }
-}
 
 //Checking to see if there is anything inside webflow thats not inside Palace to delete
 function checkLiveItems() {
@@ -202,18 +146,24 @@ function checkLiveItems() {
     // excluding all values from additional arrays using strict equality for comparisons.
     itemsToDelete = diff(uniqueWebflowPropertyCodes, uniquePalacePropertyCodes);
     if (itemsToDelete.length == 0){
-        console.log("Nothing to delete - STOP");
+        console.log("Nothing to delete.");
+        console.log(' ');
         return;
     } else {
-        for (var i = 0; i < itemsToDelete.length; i++) {
-            itemPropCodeToDelete = itemsToDelete[i];
+        console.log(`Items to delete: ${itemsToDelete}`);
+        console.log(`Items to delete length: ${itemsToDelete.length}`);
+        for (itemToDelete of itemsToDelete) {
+            console.log(`Next item to delete: ${itemToDelete}`);
             for (var i = 0; i < listOfItems.length; i++) {
-                if (listOfItems[i].propertycode == itemPropCodeToDelete) {
-                itemCodetoDelete = listOfItems[i]._id;
-                deleteItem();
+                if (listOfItems[i].propertycode == itemToDelete) {
+                    itemCodetoDelete = listOfItems[i]._id;
+                    deleteItem();
+                } else {
+                    console.log(`Webflow property ${listOfItems[i].propertycode} not equal to item property code to delete: ${itemToDelete}`);
                 }
             }
         }
+        console.log(' ');
     }
 }
 
@@ -221,10 +171,69 @@ function deleteItem() {
     webflow.removeItem({
       collectionId: collections_id,
       itemId: itemCodetoDelete
-    })
-    .then(res => {
-      console.log(`Delete item ${itemPropCodeToDelete} - STOPPED`);
     });
+    //.then(res => {
+      console.log(`Deleted item: ${itemToDelete}`);
+    //});
+}
+
+async function create() {
+    try {
+        console.log(`Palace Property Code to be imported: ${propertycode}`);
+        // console.log(`Palace Property Image: ${propertyimageArray[0]}`);
+        // console.log(`Palace Property Image Array: ${propertyimageArray}`);
+        // console.log(`Palace Property Image Array Length: ${propertyimageArray.length}`);
+
+        if (uniqueWebflowPropertyCodes.includes(propertycode)) {
+            console.log("Property exists already - STOP");
+        } else {
+            // Creates an array of image objects for the property image gallery
+            function createJsonArray() {
+                const jsonArray = [];
+
+                propertyimageArray.forEach(el => {
+                    string = '{ "url": "' + el + '" }';
+                    obj = JSON.parse(string);
+                    jsonArray.push(obj);
+                });
+                //console.log(jsonArray);
+                // Output:
+                // [
+                //     { 'url': 'http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000084.jpg' }
+                // ]
+                return jsonArray;
+            }
+
+            webflow.createItem({
+                collectionId: collections_id,
+                fields: {
+                    'name': name,
+                    'propertycode': propertycode,
+                    'propertyaddress1': propertyaddress1,
+                    'propertyaddress2': propertyaddress2,
+                    'propertyaddress3': propertyaddress4,
+                    'propertyaddress4': propertyaddress4,
+                    'propertyimage': {
+                        'url': propertyimageArray[0]
+                    },
+                    'propertyimages': createJsonArray(),
+                    // [
+                        // {
+                        //     'url': 'http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000021.jpg'
+                        // },
+                        // {
+                        //     'url': "http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000066.jpg"
+                        // }
+                    // ],
+                    '_archived': false,
+                    '_draft': false,
+                },
+            });
+            console.log(`Created item ${name}`);
+        }
+    } catch (err) {
+        console.log(`Error - Problem creating listing: ${err}`); 
+    }
 }
 
 // Publishing data to process.env.WEBFLOW_DOMAIN
