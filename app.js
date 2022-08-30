@@ -12,7 +12,7 @@ const site_id = process.env.SITE_ID;
 const webflow_domain = process.env.WEBFLOW_DOMAIN;
 let collections_id = process.env.COLLECTION_ID;
 
-let itemCodetoDelete, itemPropCodeToDelete, listOfItems, itemToDelete, itemsToDelete, name, propertyaddress1, propertyaddress2, propertyaddress3, propertyaddress4, propertycode;
+let itemCodetoDelete, itemPropCodeToDelete, listOfItems, itemToDelete, itemsToDelete, name, propertyaddress1, propertyaddress2, propertyaddress3, propertyaddress4, propertycode, propertydateavailableNew, propertydateavailableIsoDate;
 let uniqueWebflowPropertyCodes = [];
 let uniquePalacePropertyCodes = [];
 
@@ -64,12 +64,116 @@ const getPalaceListings = async () => {
             for (property of properties) {
                 // uniquePalacePropertyCodes.push(property.PropertyCode); // NOTE: This needs to be outside of this for loop as it doubles everything up. Should be in its own foor loop, going through it only once!
     
-                propertycode        = property.PropertyCode
-                propertyaddress1    = property.PropertyAddress1;
-                propertyaddress2    = property.PropertyAddress2;
-                propertyaddress3    = property.PropertyAddress3;
-                propertyaddress4    = property.PropertyAddress4;
-                name = `${propertyaddress1} ${propertyaddress2} ${propertyaddress3} ${propertyaddress4}`;
+                propertyaddress1                                = property.PropertyAddress1;
+                propertyaddress2                                = property.PropertyAddress2;
+                propertyaddress3                                = property.PropertyAddress3;
+                propertyaddress4                                = property.PropertyAddress4;
+                        // Property Agent Details
+                        propertyagentcode                               = property.PropertyAgent.PropertyAgentCode;
+                        propertyagentemail1                             = property.PropertyAgent.PropertyAgentEmail1;
+                        propertyagentemail2                             = property.PropertyAgent.PropertyAgentEmail2;
+                        propertyagentfax                                = property.PropertyAgent.PropertyAgentFax;
+                        propertyagentfullname                           = property.PropertyAgent.PropertyAgentFullName;
+                        propertyagentphonemobile                        = property.PropertyAgent.PropertyAgentPhoneMobile;
+                        propertyagentphonework                          = property.PropertyAgent.PropertyAgentPhoneWork;
+                        propertyagenttitle                              = property.PropertyAgent.PropertyAgentTitle;
+                        propertyexternalcodes                           = property.PropertyAgent.PropertyExternalCodes;
+                propertychangecode                              = property.PropertyChangeCode;
+                propertycode                                    = property.PropertyCode;
+                propertycodeglobal                              = property.PropertyCodeGlobal;
+                // PropertyCustomList missing
+                propertydateavailable                           = property.PropertyDateAvailable;
+                        // Property Features Details
+                        propertyfeaturesadverttext                      = property.PropertyFeatures.PropertyAdvertText;
+                        propertyfeaturesamenities                       = property.PropertyFeatures.PropertyAmenities;
+                        propertyfeaturesbathroomsno                     = property.PropertyFeatures.PropertyBathroomsNo;
+                        propertyfeaturesbedroomsno                      = property.PropertyFeatures.PropertyBedroomsNo;
+                        propertyfeaturescarsno                          = property.PropertyFeatures.PropertyCarsNo;
+                        propertyfeaturesclass                           = property.PropertyFeatures.PropertyClass;
+                        propertyfeaturesensuitesno                      = property.PropertyFeatures.PropertyEnsuitesNo;
+                        propertyfeaturesfeaturedetails                  = property.PropertyFeatures.PropertyFeatureDetails;
+                        propertyfeaturesfloorarea                       = property.PropertyFeatures.PropertyFloorArea;
+                        propertyfeaturesfurnishings                     = property.PropertyFeatures.PropertyFurnishings;
+                        propertyfeaturesgeographiclocation              = property.PropertyFeatures.PropertyGeographicLocation;
+                        propertyfeaturesheader                          = property.PropertyFeatures.PropertyHeader;
+                        propertyfeatureslandareahectares                = property.PropertyFeatures.PropertyLandAreaHectares;
+                        propertyfeatureslandareamsquared                = property.PropertyFeatures.PropertyLandAreaMSquared;
+                        propertyfeaturesnewconstruction                 = property.PropertyFeatures.PropertyNewConstruction;
+                        propertyfeaturesparking                         = property.PropertyFeatures.PropertyParking;
+                        propertyfeaturespetsallowed                     = property.PropertyFeatures.PropertyPetsAllowed;
+                        propertyfeaturespostcode                        = property.PropertyFeatures.PropertyPostCode;
+                        propertyfeaturespublishaddress                  = property.PropertyFeatures.PropertyPublishAddress;
+                        propertyfeaturespublishentry                    = property.PropertyFeatures.PropertyPublishEntry;
+                        propertyfeaturessmokersallowed                  = property.PropertyFeatures.PropertySmokersAllowed;
+                        propertyfeaturesstories                         = property.PropertyFeatures.PropertyStories;
+                        propertyfeaturesvirtualtoururl                  = property.PropertyFeatures.PropertyVirtualTourURL;
+                        propertyfeaturesweblinkurl                      = property.PropertyFeatures.PropertyWebLinkURL;
+                        propertyfeaturesyearbuilt                       = property.PropertyFeatures.PropertyYearBuilt;
+                propertygrid                                    = property.PropertyGrid;
+                propertymanagementtype                          = property.PropertyManagementType;
+                propertyname                                    = property.PropertyName;
+                propertyownercode                               = property.PropertyOwnerCode;
+                propertyrentamount                              = property.PropertyRentAmount;
+                propertyrentalperiod                            = property.PropertyRentalPeriod;
+                propertysortcode                                = property.PropertySortCode;
+                propertystatus                                  = property.PropertyStatus;
+                        // 3 different types: 'TradeMe', 'Real Estate', 'REAXML (NZ)' --> Why are these neccessary?
+                        // TradeMe
+                        propertysuburbtrademesuburbcode                 = property.PropertySuburb[0].PropertySuburbCode;
+                        propertysuburbtrademesuburbdistrictorpostcode   = property.PropertySuburb[0].PropertySuburbDistrictOrPostcode;
+                        propertysuburbtrademesuburbname                 = property.PropertySuburb[0].PropertySuburbName;
+                        propertysuburbtrademesuburbregionorstate        = property.PropertySuburb[0].PropertySuburbRegionOrState;
+                        propertysuburbtrademesuburbtype                 = property.PropertySuburb[0].PropertySuburbType;
+                        // Real Estate
+                        propertysuburbrealestatesuburbcode              = property.PropertySuburb[1].PropertySuburbCode;
+                        propertysuburbrealestatesuburbdistrictorpostcode= property.PropertySuburb[1].PropertySuburbDistrictOrPostcode;
+                        propertysuburbrealestatesuburbname              = property.PropertySuburb[1].PropertySuburbName;
+                        propertysuburbrealestatesuburbregionorstate     = property.PropertySuburb[1].PropertySuburbRegionOrState;
+                        propertysuburbrealestatesuburbtype              = property.PropertySuburb[1].PropertySuburbType;
+                        // REAXML (NZ)
+                        propertysuburbreaxmlsuburbcode                  = property.PropertySuburb[2].PropertySuburbCode;
+                        propertysuburbreaxmlsuburbdistrictorpostcode    = property.PropertySuburb[2].PropertySuburbDistrictOrPostcode;
+                        propertysuburbreaxmlsuburbname                  = property.PropertySuburb[2].PropertySuburbName;
+                        propertysuburbreaxmlsuburbregionorstate         = property.PropertySuburb[2].PropertySuburbRegionOrState;
+                        propertysuburbreaxmlsuburbtype                  = property.PropertySuburb[2].PropertySuburbType;
+
+                        //const s = p.PropertySuburb[0].AvailablePropertySuburbs || [];
+
+                        // PropertySuburb: {
+                        //     AvailablePropertySuburbs: s.map((si: any) => {
+                        //       return {
+                        //         PropertySuburbCode: si.PropertySuburbCode[0],
+                        //         PropertySuburbDistrictOrPostcode: si.PropertySuburbDistrictOrPostcode[0],
+                        //         PropertySuburbName: si.PropertySuburbName[0],
+                        //         PropertySuburbRegionOrState: si.PropertySuburbRegionOrState[0],
+                        //         PropertySuburbType: si.PropertySuburbType[0],
+                        //       };
+                        //     }),
+                        //   }
+
+
+                propertyunit                                    = property.PropertyUnit;
+
+                propertydateavailableNew = new Date(propertydateavailable);
+                propertydateavailableIsoDate = propertydateavailableNew.toISOString();
+
+                name = "";
+
+                // Creating the name of the property that will be pushed to Webflow
+                if (property.PropertyFeatures.PropertyPublishAddress === "No") {
+                    name = `${propertyaddress1.trim()} ${propertyaddress2.trim()}`;
+                } else {
+                    if (property.PropertyUnit) {
+                        if (property.PropertyUnit.indexOf("Flat") === -1) {
+                            name += `Unit `;
+                        }
+                        name += `${propertyunit}, `
+                    }
+                    name += `${propertyaddress1.trim()} ${propertyaddress2.trim()} ${propertyaddress3.trim()} ${propertyaddress4.trim()}`;
+                }
+
+                //name = `${propertyaddress1} ${propertyaddress2} ${propertyaddress3} ${propertyaddress4}`;
+                
                 console.log(`Property Code: ${property.PropertyCode}`);
                 console.log(`Name: ${name}`);
     
@@ -184,7 +288,7 @@ async function create() {
         // console.log(`Palace Property Image Array: ${propertyimageArray}`);
         // console.log(`Palace Property Image Array Length: ${propertyimageArray.length}`);
 
-        if (uniqueWebflowPropertyCodes.includes(propertycode)) {
+        if (uniqueWebflowPropertyCodes.includes(propertycode)) { // ***** IMPLEMENT CONDITIONAL LOGIC to check if property is active. Import only if property is active! *****
             console.log("Property exists already - STOP");
         } else {
             // Creates an array of image objects for the property image gallery
@@ -209,6 +313,8 @@ async function create() {
                 fields: {
                     'name': name,
                     'propertycode': propertycode,
+                    'propertycodeglobal': propertycodeglobal,
+                    'propertyunit': propertyunit,
                     'propertyaddress1': propertyaddress1,
                     'propertyaddress2': propertyaddress2,
                     'propertyaddress3': propertyaddress4,
@@ -225,6 +331,20 @@ async function create() {
                         //     'url': "http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000066.jpg"
                         // }
                     // ],
+                    'propertyadverttext': propertyfeaturesadverttext,
+                    'propertyagentfullname': propertyagentfullname,
+                    'propertyagentemail1': propertyagentemail1,
+                    'propertyagentphonemobile': propertyagentphonemobile,
+                    'propertyagentphonework': propertyagentphonework,
+                    'propertybathroomsno': propertyfeaturesbathroomsno,
+                    'propertybedroomsno': propertyfeaturesbedroomsno,
+                    'propertydateavailable': propertydateavailableIsoDate,
+                    'propertyheader': propertyfeaturesheader,
+                    'propertyrentamount': propertyrentamount,
+                    'propertystatus': propertystatus,
+                    "propertysuburbdistrictorpostcode": propertysuburbtrademesuburbdistrictorpostcode,
+                    "propertysuburbname": propertysuburbtrademesuburbname,
+                    "propertysuburbregionorstate": propertysuburbtrademesuburbregionorstate,
                     '_archived': false,
                     '_draft': false,
                 },
