@@ -10,11 +10,13 @@ const palaceEmail = process.env.PALACE_LOGIN;
 const palacePass = process.env.PALACE_PASSWORD;
 const site_id = process.env.SITE_ID;
 const webflow_domain = process.env.WEBFLOW_DOMAIN;
-let collections_id = process.env.COLLECTION_ID;
+//let collections_id = process.env.COLLECTION_ID;
 
 let itemCodetoDelete, itemPropCodeToDelete, listOfItems, itemToDelete, itemsToDelete, name, propertyaddress1, propertyaddress2, propertyaddress3, propertyaddress4, propertycode, propertydateavailableNew, propertydateavailableIsoDate;
+let uniqueWebflowCollectionsArray = [];
 let uniqueWebflowPropertyCodes = [];
 let uniquePalacePropertyCodes = [];
+let propertyLoopCounter = 0;
 
 const webflow = new Webflow({
     token: api_key
@@ -51,13 +53,15 @@ const getPalaceListings = async () => {
         console.log(`Palace Property Codes: ${uniquePalacePropertyCodes}`);
         console.log(' ');
 
-        await pullData();
+        const webflowCollections = await pullWebflowCollections();
+        const uniqueWebflowCollectionsArray = await createUniqueWebflowCollectionsArray(webflowCollections);
+        await loopCollectionsAndPullItems(uniqueWebflowCollectionsArray);
 
 
         //Simple sleep function to get around the API call restrictions in Webflow
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
-        }
+        }        
 
         //function that recursively invokes itself
         (async function loopProperties() { // Might have to add 'await' to make sure looping properties finishes before site gets published!
@@ -182,7 +186,15 @@ const getPalaceListings = async () => {
                     propertyimageArray = imgArr;
                 });
                 
-                await create();
+                console.log(`Property Loop Counter: ${propertyLoopCounter}`);
+                if (propertyLoopCounter < 10) {
+                    await create(uniqueWebflowCollectionsArray[0]);
+                } else {
+                    await create(uniqueWebflowCollectionsArray[1]);
+                }
+                
+                propertyLoopCounter ++;
+                console.log(`Property Loop Counter New: ${propertyLoopCounter}`);
 
                 //call sleep function from above (might have to increase timer)
                 await sleep(5000);
@@ -227,10 +239,43 @@ function getImages(code) {
     })
 }
 
-//Pull and init create if doesn't exist
-async function pullData() {
+// function to pull collections and number of collections
+async function pullWebflowCollections() {
+    return webflow.collections({
+        siteId: site_id
+    })
+    // the response is an array of the collections
+    // .then(res => {
+    //     for (var i = 0; i < res.length; i++) {
+    //         uniqueWebflowCollections.push(res[i]._id);
+    //     }
+    //     console.log(`Unique Webflow Collections Length: ${uniqueWebflowCollections.length}`);
+    // });
+}
+
+async function createUniqueWebflowCollectionsArray(webflowCollections) {
+    for (var i = 0; i < webflowCollections.length; i++) {
+        uniqueWebflowCollectionsArray.push(webflowCollections[i]._id);
+    }
+    console.log(`Unique Webflow Collections Length: ${uniqueWebflowCollectionsArray.length}`);
+    return uniqueWebflowCollectionsArray;
+}
+
+// Pull all items across all collections and check againsrt live items in Webflow
+async function loopCollectionsAndPullItems(uniqueWebflowCollectionsArray) {
+    // Determine collections list.length and loop with for loop through to retrieve all items within all collections. Push all items into uniqueWebflowPropertyCodes
+    console.log(`Unique Webflow Collections: ${uniqueWebflowCollectionsArray}`);
+    
+    for (const uniqueWebflowCollection of uniqueWebflowCollectionsArray) {
+        console.log(`Unique Webflow Collection to iterate: ${uniqueWebflowCollection}`);
+        
+        await pullWebflowItems(uniqueWebflowCollection);
+    }
+};
+
+async function pullWebflowItems(uniqueWebflowCollection) {
     return webflow.items({
-      collectionId: collections_id
+        collectionId: uniqueWebflowCollection
     })
     .then(res => {
         listOfItems = res.items;
@@ -240,12 +285,12 @@ async function pullData() {
         console.log(`Unique Webflow Property Codes: ${uniqueWebflowPropertyCodes}`);
 
         //Checking to see if there is anything inside webflow thats not inside Palace to delete
-        checkLiveItems();
+        checkLiveItems(uniqueWebflowCollection);
     });
-};
+}
 
 //Checking to see if there is anything inside webflow thats not inside Palace to delete
-function checkLiveItems() {
+function checkLiveItems(webflowCollection) {
     // diff(): Returns an array with only the unique values from the first array, by
     // excluding all values from additional arrays using strict equality for comparisons.
     itemsToDelete = diff(uniqueWebflowPropertyCodes, uniquePalacePropertyCodes);
@@ -261,7 +306,8 @@ function checkLiveItems() {
             for (var i = 0; i < listOfItems.length; i++) {
                 if (listOfItems[i].propertycode == itemToDelete) {
                     itemCodetoDelete = listOfItems[i]._id;
-                    deleteItem();
+                    console.log(`Item Code ${itemCodetoDelete} to delete in Collection ${webflowCollection}`);
+                    deleteItem(webflowCollection);
                 } else {
                     console.log(`Webflow property ${listOfItems[i].propertycode} not equal to item property code to delete: ${itemToDelete}`);
                 }
@@ -271,17 +317,32 @@ function checkLiveItems() {
     }
 }
 
-function deleteItem() {
+function deleteItem(webflowCollectionId) {
+    // Loop through all collections and find item to be deleted
+    // get items 
+
     webflow.removeItem({
-      collectionId: collections_id,
+      collectionId: webflowCollectionId,
       itemId: itemCodetoDelete
+    }).then(res => {
+      console.log(`Deleted item ${itemToDelete} from Collection ${webflowCollectionId}`);
     });
-    //.then(res => {
-      console.log(`Deleted item: ${itemToDelete}`);
-    //});
 }
 
-async function create() {
+// async function deleteItem(webflowCollectionId) {
+//     try {
+//         const removedItem = await webflow.removeItem({
+//             collectionId: webflowCollectionId,
+//             itemId: itemCodetoDelete
+//         });
+//         console.log(`Deleted item ${itemToDelete} from Collection ${webflowCollectionId}`);
+//     } catch (err) {
+//         console.log(`Error - Problem deleting item: ${err}`); 
+//     }
+    
+// }
+
+async function create(createInWebflowCollection) {
     try {
         console.log(`Palace Property Code to be imported: ${propertycode}`);
         // console.log(`Palace Property Image: ${propertyimageArray[0]}`);
@@ -308,8 +369,10 @@ async function create() {
                 return jsonArray;
             }
 
+            // while loop with i++: while i < 50/100, add to first collection
+            // continue with another while loop for second collection, and so on... 
             webflow.createItem({
-                collectionId: collections_id,
+                collectionId: createInWebflowCollection,
                 fields: {
                     'name': name,
                     'propertycode': propertycode,
