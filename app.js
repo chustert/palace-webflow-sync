@@ -44,9 +44,18 @@ const getPalaceSuburbs = async () => {
         const properties = response.data;
 
         for (const property of properties) {
-            uniquePalaceSuburbCodesArray.push(property.PropertySuburb[0].PropertySuburbCode); // NOTE: This needs to be outside of this for loop as it doubles everything up. Should be in its own foor loop, going through it only once!
+            console.log(" ");
+            console.log(`Unique Palace Suburb Codes Array: ${uniquePalaceSuburbCodesArray}`);
+            console.log(`Palace Suburb Code to include: ${property.PropertySuburb[0].PropertySuburbCode}`);
+            // FOR THE SUBURBS THE CODES ARE NOT UNIQUE BECAUSE THEY CAN BE SAME WITHIN A PROPERTY OBJECT - NEEDS TO BE CLEANED UP WITH DUPLICATES BEEING DELETED
+            if (!uniquePalaceSuburbCodesArray.includes(property.PropertySuburb[0].PropertySuburbCode)) {
+                uniquePalaceSuburbCodesArray.push(property.PropertySuburb[0].PropertySuburbCode); // NOTE: This needs to be outside of this for loop as it doubles everything up. Should be in its own foor loop, going through it only once!
+            } else {
+                console.log(`Palace Suburb Code already exists - next one...`);
+            }
+            console.log(" ");
         }
-        console.log(`Palace Suburb Codes: ${uniquePalaceSuburbCodesArray}`);
+        console.log(`Unique Palace Suburb Codes: ${uniquePalaceSuburbCodesArray}`);
         console.log(' ');
 
         const webflowCollections = await pullWebflowCollections();
@@ -59,7 +68,7 @@ const getPalaceSuburbs = async () => {
         }        
 
         //function that recursively invokes itself
-        (async function loopProperties() { // Might have to add 'await' to make sure looping properties finishes before site gets published!
+        await (async function loopProperties() { // Might have to add 'await' to make sure looping properties finishes before site gets published!
             for (property of properties) {
                 // uniquePalacePropertyCodes.push(property.PropertyCode); // NOTE: This needs to be outside of this for loop as it doubles everything up. Should be in its own foor loop, going through it only once!
     
@@ -183,7 +192,10 @@ const getPalaceSuburbs = async () => {
                 // .then(imgArr => {
                 //     propertyimageArray = imgArr;
                 // });
+
                 
+                
+
                 if (suburbLoopCounter < 300) {
                     await createSuburb(uniqueWebflowSuburbsCollectionsArray[0]);
                 } else {
@@ -192,8 +204,14 @@ const getPalaceSuburbs = async () => {
                 
                 suburbLoopCounter ++;
 
+                if (!uniqueWebflowSuburbCodesArray.includes(propertysuburbtrademesuburbcode)) {
+                    uniqueWebflowSuburbCodesArray.push(propertysuburbtrademesuburbcode);
+                    console.log(`UPDATED Unique Webflow Suburb Codes: ${uniqueWebflowSuburbCodesArray}`);
+                }
+                console.log("");
+
                 //call sleep function from above (might have to increase timer)
-                await sleep(1500);
+                await sleep(1100);
     
             }
         })();
@@ -203,7 +221,7 @@ const getPalaceSuburbs = async () => {
     }
 }
 
-const getPalaceListings = async () => {
+async function getPalaceListings() {
     try {
         // await connectToAvailableProperties();
         const response = await axios.get('https://api.getpalace.com/Service.svc/RestService/v2AvailableProperties/JSON', {
@@ -246,7 +264,7 @@ const getPalaceListings = async () => {
         }        
 
         //function that recursively invokes itself
-        (async function loopProperties() { // Might have to add 'await' to make sure looping properties finishes before site gets published!
+        await (async function loopProperties() { // Might have to add 'await' to make sure looping properties finishes before site gets published!
             for (property of properties) {
                 // uniquePalacePropertyCodes.push(property.PropertyCode); // NOTE: This needs to be outside of this for loop as it doubles everything up. Should be in its own foor loop, going through it only once!
     
@@ -369,7 +387,7 @@ const getPalaceListings = async () => {
                     propertyimageArray = imgArr;
                 });
                 
-                if (propertyLoopCounter < 100) {
+                if (propertyLoopCounter < 80) {
                     await createListings(uniqueWebflowListingsCollectionsArray[0]);
                 } else {
                     await createListings(uniqueWebflowListingsCollectionsArray[1]);
@@ -378,7 +396,7 @@ const getPalaceListings = async () => {
                 propertyLoopCounter ++;
 
                 //call sleep function from above (might have to increase timer)
-                await sleep(2000);
+                await sleep(1100);
     
             }
         })();
@@ -474,7 +492,7 @@ async function loopListingsCollectionsAndPullItems(uniqueWebflowListingsCollecti
     // console.log(`Webflow Collections: ${webflowCollections[i].name}`);
     
     for (const uniqueWebflowListingsCollection of uniqueWebflowListingsCollectionsArray) {
-        console.log(`Unique Webflow Collection to iterate: ${uniqueWebflowListingsCollection}`);
+        console.log(`Unique Webflow Collections to iterate: ${uniqueWebflowListingsCollection}`);
         
         const webflowItems = await pullWebflowItems(uniqueWebflowListingsCollection);
         await createUniqueWebflowPropertyCodesArray(webflowItems);
@@ -487,12 +505,12 @@ async function loopListingsCollectionsAndPullItems(uniqueWebflowListingsCollecti
 
 async function loopSuburbsCollectionsAndPullItems(uniqueWebflowSuburbsCollectionsArray) {
     // Determine collections list.length and loop with for loop through to retrieve all items within all collections. Push all items into uniqueWebflowPropertyCodes
-    console.log(`Unique Webflow Collections: ${uniqueWebflowSuburbsCollectionsArray}`);
+    console.log(`Unique Webflow Suburb Collections: ${uniqueWebflowSuburbsCollectionsArray}`);
 
     // console.log(`Webflow Collections: ${webflowCollections[i].name}`);
     
     for (const uniqueWebflowSuburbsCollection of uniqueWebflowSuburbsCollectionsArray) {
-        console.log(`Unique Webflow Collection to iterate: ${uniqueWebflowSuburbsCollection}`);
+        console.log(`Unique Webflow Suburb Collections to iterate: ${uniqueWebflowSuburbsCollection}`);
         
         const webflowItems = await pullWebflowItems(uniqueWebflowSuburbsCollection);
         await createUniqueWebflowSuburbCodesArray(webflowItems);
@@ -773,7 +791,7 @@ async function createSuburb(createInWebflowCollection) {
         // console.log(`Palace Property Image Array Length: ${propertyimageArray.length}`);
 
         if (uniqueWebflowSuburbCodesArray.includes(propertysuburbtrademesuburbcode)) { // ***** IMPLEMENT CONDITIONAL LOGIC to check if property is active. Import only if property is active! *****
-            console.log("Property exists already - STOP");
+            console.log("Suburb exists already - STOP");
             console.log("");
         } else {
             webflow.createItem({
@@ -820,7 +838,6 @@ async function createSuburb(createInWebflowCollection) {
                 },
             });
             console.log(`Created suburb item ${name} in collection ${createInWebflowCollection}`);
-            console.log("");
         }
     } catch (err) {
         console.log(`Error - Problem creating listing: ${err}`); 
@@ -833,22 +850,21 @@ async function publishToSite() {
         siteId: site_id,
         domains: [webflow_domain]
     })
-    // .then(res => {
-    //     console.log(`Published site to ${webflow_domain}!`);
-    //   }); 
+    .then(res => {
+        console.log(`Published site to ${webflow_domain}!`);
+      }); 
 }
-
-async function confirmPublishing() {
-    console.log(`Published site to ${webflow_domain}!`);
-}
-
 
 async function fullUpload () {
-    const palaceListings = await getPalaceListings();
-    // await getPalaceSuburbs();
-    // const publishedSite = await publishToSite();
-    // await confirmPublishing(publishedSite);
+    try {
+        await getPalaceListings();
+        await getPalaceSuburbs();
+        publishToSite();
+    } catch {
+        console.log(`Error - Problem doing fullUpload(): ${err}`); 
+    } 
 }
 
 fullUpload();
 
+// getPalaceListings();
