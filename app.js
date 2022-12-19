@@ -950,7 +950,7 @@ async function createListings(createInWebflowCollection) {
                     'propertyagentemail1': propertyagentemail1,
                     'propertyagentphonemobile': propertyagentphonemobile,
                     'propertyagentphonework': propertyagentphonework,
-                    'propertybathroomsno': propertyfeaturesbathroomsno,
+                    'propertybathroomsno': propertyfeaturesbathroomsno.trim(),
                     'propertybedroomsno': propertyfeaturesbedroomsno,
                     'propertycarsno': propertyfeaturescarsno,
                     'propertydateavailable': propertydateavailableIsoDate,
