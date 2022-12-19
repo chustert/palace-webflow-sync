@@ -142,7 +142,7 @@ async function getPalaceListings() {
                         propertyfeaturesadverttext                      = property.PropertyFeatures.PropertyAdvertText;
                         propertyfeaturesamenities                       = property.PropertyFeatures.PropertyAmenities;
                         propertyfeaturesbathroomsno                     = property.PropertyFeatures.PropertyBathroomsNo;
-                        propertyfeaturesbedroomsno                      = property.PropertyFeatures.PropertyBedroomsNo;
+                        propertyfeaturesbedroomsno                      = property.PropertyFeatures.PropertyBedroomsNo.trim();
                         propertyfeaturescarsno                          = modules.isInt(property.PropertyFeatures.PropertyCarsNo) ? property.PropertyFeatures.PropertyCarsNo : "";
                         propertyfeaturesclass                           = property.PropertyFeatures.PropertyClass;
                         propertyfeaturesensuitesno                      = property.PropertyFeatures.PropertyEnsuitesNo;
@@ -950,7 +950,7 @@ async function createListings(createInWebflowCollection) {
                     'propertyagentemail1': propertyagentemail1,
                     'propertyagentphonemobile': propertyagentphonemobile,
                     'propertyagentphonework': propertyagentphonework,
-                    'propertybathroomsno': propertyfeaturesbathroomsno.trim(),
+                    'propertybathroomsno': propertyfeaturesbathroomsno,
                     'propertybedroomsno': propertyfeaturesbedroomsno,
                     'propertycarsno': propertyfeaturescarsno,
                     'propertydateavailable': propertydateavailableIsoDate,
