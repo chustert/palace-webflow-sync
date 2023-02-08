@@ -226,9 +226,9 @@ async function getPalaceListings() {
                 consoleLogger.log(`Number of items in first Collection: ${uniqueWebflowListingsCollectionsArrayItems.items.length}`);
 
                 if (propertyLoopCounter < 100 && uniqueWebflowListingsCollectionsArrayItems.items.length < 100) {
-                    await createListings(uniqueWebflowListingsCollectionsArray[1]);
-                } else {
                     await createListings(uniqueWebflowListingsCollectionsArray[0]);
+                } else {
+                    await createListings(uniqueWebflowListingsCollectionsArray[1]);
                 }
                 
                 propertyLoopCounter ++;
