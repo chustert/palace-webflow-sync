@@ -970,7 +970,7 @@ async function createListings(createInWebflowCollection) {
             consoleLogger.log("");
         }
     } catch (err) {
-        consoleLogger.error(`Error - Problem creating listing: ${err}`); 
+        consoleLogger.error(`Error - PROPERTIES_COLLECTION_ID: ${err}`); 
     }
 }
 
@@ -1055,7 +1055,7 @@ async function createDistrict(createInWebflowCollection) {
             consoleLogger.log("District exists already - STOP");
             consoleLogger.log("");
         } else {
-            const webflowRegionItemsForDistricts = await pullWebflowItems('634e176db5986e35b47cbf66');
+            const webflowRegionItemsForDistricts = await pullWebflowItems('639656400769503f0f12fe52');
             const RegionIDForDistrict = await findRegionIDForDistrict(webflowRegionItemsForDistricts);
             await createDistrictItem(createInWebflowCollection, RegionIDForDistrict)
         }
@@ -1070,7 +1070,7 @@ async function createSuburb(createInWebflowCollection) {
             consoleLogger.log("Suburb exists already - STOP");
             consoleLogger.log("");
         } else {
-            const webflowDistrictItemsForSuburbs = await pullWebflowItems('634e176db5986ee9f47cbf65');
+            const webflowDistrictItemsForSuburbs = await pullWebflowItems('63965640076950aca812fe56');
             const DistrictIDForSuburb = await findDistrictIDForSuburb(webflowDistrictItemsForSuburbs);
             await createSuburbItem(createInWebflowCollection, DistrictIDForSuburb)
         }
