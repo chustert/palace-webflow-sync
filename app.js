@@ -69,6 +69,10 @@ let itemCodetoDelete,
   propertydateavailableNew,
   propertydateavailableIsoDate;
 
+  let today = new Date();
+  // Setting hours, minutes, seconds, and milliseconds to 0 to get the start of the day
+  today.setHours(0, 0, 0, 0);
+
 let uniqueWebflowListingsCollectionsArray = [];
 let uniqueWebflowRegionsCollectionsArray = [];
 let uniqueWebflowDistrictsCollectionsArray = [];
@@ -129,9 +133,12 @@ async function getPalaceListings() {
 
 
     for (const property of allProperties) {
-      uniquePalacePropertyCodesArray.push(property.PropertyCode);
+      if (property.PropertyStatus === "Active" && property.PropertyFeatures.PropertyPublishEntry === "Yes") {
+        uniquePalacePropertyCodesArray.push(property.PropertyCode);
+      }
     }
     consoleLogger.log(`Palace Property Codes: ${uniquePalacePropertyCodesArray}`);
+    consoleLogger.log(`Enabled Palace Properties: ${uniquePalacePropertyCodesArray.length}`);
     consoleLogger.log(" ");
 
     const webflowCollections = await pullWebflowCollections();
@@ -258,7 +265,7 @@ async function getPalaceListings() {
         });
 
         const uniqueWebflowListingsCollectionsArrayItems = await pullWebflowItems(
-          uniqueWebflowListingsCollectionsArray[1]
+          uniqueWebflowListingsCollectionsArray[0]
         );
         consoleLogger.log(
           `Number of items in first Collection: ${uniqueWebflowListingsCollectionsArrayItems.items.length}`
@@ -270,7 +277,7 @@ async function getPalaceListings() {
           await createListings(uniqueWebflowListingsCollectionsArray[1]);
         }
 
-        propertyLoopCounter++;
+        // propertyLoopCounter++;
 
         //call sleep function from above (might have to increase timer)
         await sleep(2000);
@@ -1024,73 +1031,87 @@ async function createListings(createInWebflowCollection) {
     // consoleLogger.log(`Palace Property Image Array Length: ${propertyimageArray.length}`);
 
     if (uniqueWebflowPropertyCodesArray.includes(propertycode)) {
-      // ***** IMPLEMENT CONDITIONAL LOGIC to check if property is active. Import only if property is active! *****
       consoleLogger.log("Property exists already - STOP");
       consoleLogger.log("");
     } else {
-      // Creates an array of image objects for the property image gallery
-      function createJsonArray() {
-        const jsonArray = [];
+      // ***** CONDITIONAL LOGIC to check if property is active. Import only if property is active! *****      
+      consoleLogger.log(`Property Status: ${propertystatus}`)
+      consoleLogger.log(`Property Publish Entry: ${propertyfeaturespublishentry}`)
+      // consoleLogger.log(`Property Available: ${propertydateavailableNew}`)
 
-        propertyimageArray.forEach((el) => {
-          string = '{ "url": "' + el + '" }';
-          obj = JSON.parse(string);
-          jsonArray.push(obj);
-        });
-        //consoleLogger.log(jsonArray);
-        // Output:
-        // [
-        //     { 'url': 'http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000084.jpg' }
-        // ]
-        return jsonArray;
-      }
+      if (propertystatus === "Active" && propertyfeaturespublishentry === "Yes") {
+        // Creates an array of image objects for the property image gallery
+        function createJsonArray() {
+          const jsonArray = [];
 
-      webflow.createItem({
-        collectionId: createInWebflowCollection,
-        fields: {
-          name: name,
-          propertycode: propertycode,
-          propertycodeglobal: propertycodeglobal,
-          propertyunit: propertyunit,
-          propertyaddress1: propertyaddress1,
-          propertyaddress2: propertyaddress2,
-          propertyaddress3: propertyaddress3,
-          propertyaddress4: propertyaddress4,
-          propertyimage: {
-            url: propertyimageArray[0],
-          },
-          propertyimages: createJsonArray(),
+          propertyimageArray.forEach((el) => {
+            string = '{ "url": "' + el + '" }';
+            obj = JSON.parse(string);
+            jsonArray.push(obj);
+          });
+          //consoleLogger.log(jsonArray);
+          // Output:
           // [
-          // {
-          //     'url': 'http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000021.jpg'
-          // },
-          // {
-          //     'url': "http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000066.jpg"
-          // }
-          // ],
-          propertyadverttext: propertyfeaturesadverttext,
-          propertyagentfullname: propertyagentfullname,
-          propertyagentemail1: propertyagentemail1,
-          propertyagentphonemobile: propertyagentphonemobile,
-          propertyagentphonework: propertyagentphonework,
-          propertybathroomsno: propertyfeaturesbathroomsno,
-          propertybedroomsno: propertyfeaturesbedroomsno,
-          propertycarsno: propertyfeaturescarsno,
-          propertydateavailable: propertydateavailableIsoDate,
-          propertyheader: propertyfeaturesheader,
-          propertyrentamount: propertyrentamount,
-          propertystatus: propertystatus,
-          propertysuburbdistrictorpostcode: propertysuburbtrademesuburbdistrictorpostcode,
-          propertysuburbname: propertysuburbtrademesuburbname,
-          propertysuburbregionorstate: propertysuburbtrademesuburbregionorstate,
-          propertyclass: propertyfeaturesclass,
-          propertypetsallowed: propertyfeaturespetsallowed,
-          _archived: false,
-          _draft: false,
-        },
-      });
-      consoleLogger.log(`Created item ${name} in collection ${createInWebflowCollection}`);
-      consoleLogger.log("");
+          //     { 'url': 'http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000084.jpg' }
+          // ]
+          return jsonArray;
+        }
+
+        webflow.createItem({
+          collectionId: createInWebflowCollection,
+          fields: {
+            name: name,
+            propertycode: propertycode,
+            propertycodeglobal: propertycodeglobal,
+            propertyunit: propertyunit,
+            propertyaddress1: propertyaddress1,
+            propertyaddress2: propertyaddress2,
+            propertyaddress3: propertyaddress3,
+            propertyaddress4: propertyaddress4,
+            propertyimage: {
+              url: propertyimageArray[0],
+            },
+            propertyimages: createJsonArray(),
+            // [
+            // {
+            //     'url': 'http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000021.jpg'
+            // },
+            // {
+            //     'url': "http://images.getpalace.com/0e2c2606-1a59-4df7-b346-d20c7c153349/RBPI000066.jpg"
+            // }
+            // ],
+            propertyadverttext: propertyfeaturesadverttext,
+            propertyagentfullname: propertyagentfullname,
+            propertyagentemail1: propertyagentemail1,
+            propertyagentphonemobile: propertyagentphonemobile,
+            propertyagentphonework: propertyagentphonework,
+            propertybathroomsno: propertyfeaturesbathroomsno,
+            propertybedroomsno: propertyfeaturesbedroomsno,
+            propertycarsno: propertyfeaturescarsno,
+            propertydateavailable: propertydateavailableIsoDate,
+            propertyheader: propertyfeaturesheader,
+            propertyrentamount: propertyrentamount,
+            propertystatus: propertystatus,
+            propertysuburbdistrictorpostcode: propertysuburbtrademesuburbdistrictorpostcode,
+            propertysuburbname: propertysuburbtrademesuburbname,
+            propertysuburbregionorstate: propertysuburbtrademesuburbregionorstate,
+            propertyclass: propertyfeaturesclass,
+            propertypetsallowed: propertyfeaturespetsallowed,
+            _archived: false,
+            _draft: false,
+          },
+        });
+        consoleLogger.log(`Created item ${name} in collection ${createInWebflowCollection}`);
+        propertyLoopCounter++;
+        consoleLogger.log(`Loop counter at: ${propertyLoopCounter}`);
+        consoleLogger.log("");
+
+      } else {
+        consoleLogger.log("The property is either inactive or not publicly available.");
+        consoleLogger.log("");
+      }
+ 
+      
     }
   } catch (err) {
     consoleLogger.error(`Error - PROPERTIES_COLLECTION_ID: ${err}`);

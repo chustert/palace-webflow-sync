@@ -30,3 +30,5 @@ Thumbs.db
 *.env
 __app.js
 node_modules
+errStdErr.txt
+normalStdout.txt
