@@ -8,6 +8,7 @@ const findDuplicates = require("array-find-duplicates");
 // const { response } = require('express');
 const { Console } = require("console");
 const fs = require("fs");
+const fsPromises = require("fs").promises;
 
 const consoleLogger = new Console({
   stdout: fs.createWriteStream("normalStdout.txt"),
@@ -143,6 +144,7 @@ async function getPalaceListings() {
 
     const webflowCollections = await pullWebflowCollections();
     const uniqueWebflowListingsCollectionsArray = await createUniqueWebflowListingsCollectionsArray(webflowCollections);
+
     await loopListingsCollectionsAndPullItems(uniqueWebflowListingsCollectionsArray);
 
     //Simple sleep function to get around the API call restrictions in Webflow
@@ -284,7 +286,7 @@ async function getPalaceListings() {
       }
     })();
   } catch (err) {
-    consoleLogger.error(`Error - Problem loading listing: ${err}`);
+    consoleLogger.error(`⛔ Error - Problem loading listing: ${err}`);
   }
 }
 
@@ -302,7 +304,7 @@ const cleanUpWebflowSuburbs = async () => {
     await checkDuplicateSuburbItems(suburbsCollection);
     await checkLiveSuburbItems(suburbsCollection);
   } catch (err) {
-    consoleLogger.error(`Error Cleaning Up Webflow Suburbs: ${err}`);
+    consoleLogger.error(`⛔ Error Cleaning Up Webflow Suburbs: ${err}`);
   }
 };
 
@@ -320,7 +322,7 @@ const cleanUpWebflowDistricts = async () => {
     await checkDuplicateDistrictItems(districtsCollection);
     await checkLiveDistrictItems(districtsCollection);
   } catch (err) {
-    consoleLogger.error(`Error Cleaning Up Webflow Districts: ${err}`);
+    consoleLogger.error(`⛔ Error Cleaning Up Webflow Districts: ${err}`);
   }
 };
 
@@ -338,7 +340,7 @@ const cleanUpWebflowRegions = async () => {
     await checkDuplicateRegionItems(regionsCollection);
     await checkLiveRegionItems(regionsCollection);
   } catch (err) {
-    consoleLogger.error(`Error Cleaning Up Webflow Regions: ${err}`);
+    consoleLogger.error(`⛔ Error Cleaning Up Webflow Regions: ${err}`);
   }
 };
 
@@ -386,7 +388,7 @@ const getPalaceRegions = async () => {
       }
     })();
   } catch (err) {
-    consoleLogger.error(`Error - Problem loading suburb: ${err}`);
+    consoleLogger.error(`⛔ Error - Problem loading suburb: ${err}`);
   }
 };
 
@@ -434,7 +436,7 @@ const getPalaceDistricts = async () => {
       }
     })();
   } catch (err) {
-    consoleLogger.error(`Error - Problem loading suburb: ${err}`);
+    consoleLogger.error(`⛔ Error - Problem loading suburb: ${err}`);
   }
 };
 
@@ -483,7 +485,7 @@ const getPalaceSuburbs = async () => {
       }
     })();
   } catch (err) {
-    consoleLogger.error(`Error - Problem loading suburb: ${err}`);
+    consoleLogger.error(`⛔ Error - Problem loading suburb: ${err}`);
   }
 };
 
@@ -574,7 +576,7 @@ function getImages(code, credentials) {
       return propertyImages;
     })
     .catch((err) => {
-      consoleLogger.error(`Error - Problems loading image: ${err}`);
+      consoleLogger.error(`⛔ Error - Problems loading image: ${err}`);
     });
 }
 
@@ -889,9 +891,15 @@ async function checkDuplicateSuburbItems(webflowCollection) {
 
 //Checking to see if there is anything inside webflow thats not inside Palace to delete
 async function checkLiveItems(webflowCollection) {
+
+
+
   // diff(): Returns an array with only the unique values from the first array, by
   // excluding all values from additional arrays using strict equality for comparisons.
   itemsToDelete = diff(uniqueWebflowPropertyCodesArray, uniquePalacePropertyCodesArray);
+
+
+
   if (itemsToDelete.length == 0) {
     consoleLogger.log("Nothing to delete.");
     consoleLogger.log("");
@@ -1018,10 +1026,41 @@ async function deleteItem(webflowCollectionId, itemCodetoDelete, itemNametoDelet
     consoleLogger.log("");
   } catch (err) {
     consoleLogger.error(
-      `Error - Problem deleting item ${itemNametoDelete} from Collection ${webflowCollectionId}: ${err}`
+      `⛔  Error - Problem deleting item ${itemNametoDelete} from Collection ${webflowCollectionId}: ${err}`
     );
   }
 }
+
+// function to pull all items of a collection
+async function fetchWebflowItemByPropertyCode(targetPropertyCode) {
+  try {
+    const items1Response = await axios.get(`https://api.webflow.com/collections/${uniqueWebflowListingsCollectionsArray[0]}/items?api_version=1.0.0&access_token=${api_key}`);
+    const items2Response = await axios.get(`https://api.webflow.com/collections/${uniqueWebflowListingsCollectionsArray[1]}/items?api_version=1.0.0&access_token=${api_key}`);
+    
+    // Assuming the API responses are JSON
+    const apiData1 = items1Response.data;
+    const apiData2 = items2Response.data;
+
+    // Combine the "items" arrays from both responses
+    const combinedData = {
+      items: [...apiData1.items, ...apiData2.items],
+    };
+
+    // const combinedDataJSON = JSON.stringify(combinedData, null, 2);
+    // await fsPromises.writeFile("combinedData.json", combinedDataJSON);
+
+    const targetItem = combinedData.items.find(item => item.propertycode === targetPropertyCode);
+
+    return targetItem;
+
+    // Now you can refer to specific fields in the 'combinedData' variable
+    // console.log('pullWebflowListingsCollectionItems combinedData:', JSON.stringify(combinedData, null, 2));
+    // console.log('pullWebflowListingsCollectionItems combinedData:', JSON.stringify(combinedData.items[0].propertycode, null, 2));
+  } catch (error) {
+    consoleLogger.error('⛔ Error fetching item or combining data in fetchWebflowItemByPropertyCode():', error.message);
+  }
+}
+
 
 async function createListings(createInWebflowCollection) {
   try {
@@ -1031,7 +1070,159 @@ async function createListings(createInWebflowCollection) {
     // consoleLogger.log(`Palace Property Image Array Length: ${propertyimageArray.length}`);
 
     if (uniqueWebflowPropertyCodesArray.includes(propertycode)) {
-      consoleLogger.log("Property exists already - STOP");
+      consoleLogger.log("Property already exists - Check if update is needed...");
+
+      // console.log(`propertycode: ${propertycode}`);
+
+      // To add function of checking if any of the fields have changed. 
+
+      const fetchedWebflowItem = await fetchWebflowItemByPropertyCode(propertycode);      
+      
+      // const fetchedWebflowItemJSON = JSON.stringify(fetchedWebflowItem, null, 2);
+      // consoleLogger.log(`fetchedWebflowItemJSON: ${fetchedWebflowItemJSON}`);
+
+      // console.log(`fetchedWebflowItemJSON: ${fetchedWebflowItem.propertycode}`);
+
+      const palaceValues = {
+        propertyagentemail1: propertyagentemail1,
+        propertydateavailable: propertydateavailableIsoDate,
+        propertypetsallowed: propertyfeaturespetsallowed,
+        propertyunit: propertyunit,
+        propertyagentphonemobile: propertyagentphonemobile,
+        propertybathroomsno: propertyfeaturesbathroomsno,
+        propertybedroomsno: propertyfeaturesbedroomsno,
+        propertycarsno: propertyfeaturescarsno,
+        propertyrentamount: propertyrentamount,
+        name: name,
+        propertycodeglobal: propertycodeglobal,
+        propertyaddress1: propertyaddress1,
+        propertyaddress2: propertyaddress2,
+        propertyaddress3: propertyaddress3,
+        propertyaddress4: propertyaddress4,
+        propertyadverttext: propertyfeaturesadverttext,
+        propertyagentfullname: propertyagentfullname,
+        propertyagentphonework: propertyagentphonework,
+        propertyheader: propertyfeaturesheader,
+        propertystatus: propertystatus,
+        propertysuburbdistrictorpostcode: propertysuburbtrademesuburbdistrictorpostcode,
+        propertysuburbname: propertysuburbtrademesuburbname,
+        propertysuburbregionorstate: propertysuburbtrademesuburbregionorstate,
+        propertyclass: propertyfeaturesclass,
+      };
+
+      // Object to store fields that need to be updated
+      const fieldsToUpdate = {};
+
+      const palaceValuesObjectKeys = Object.keys(palaceValues);
+
+      for (const property of palaceValuesObjectKeys) {        
+        const fetchedWebflowValue = fetchedWebflowItem[property];
+        const palaceValue = palaceValues[property];
+    
+        if (fetchedWebflowValue != undefined && palaceValue != undefined && fetchedWebflowValue != palaceValue) {
+          // console.log(`fetchedWebflowValue: ${fetchedWebflowValue}`);
+          // console.log(`palaceValue: ${palaceValue}`);
+          fieldsToUpdate[property] = palaceValue;
+        }
+      }
+
+      
+      // UPDATE IMAGES - START
+      //
+
+      function extractFileNames(urlArray) {
+        return urlArray.map(url => {
+          const fileNameWithExtension = url.substring(url.lastIndexOf('/') + 1); // Get the last part after the last '/'
+          const fileNameWithoutExtension = fileNameWithExtension.split('.')[0]; // Remove the file type extension
+          const fileNameAfterUnderscore = fileNameWithoutExtension.includes('_')
+            ? fileNameWithoutExtension.split('_')[1] // Get the part after the "_"
+            : fileNameWithoutExtension; // If no underscore, use the entire name
+          return fileNameAfterUnderscore;
+        });
+      }
+
+      // Extract URLs from fetchedWebflowItem.propertyimages
+      const fetchedWebflowImageURLs = fetchedWebflowItem.propertyimages.map(image => image.url);
+
+      // Check if there are differences in images
+      // consoleLogger.log(`propertyimageArray: ${JSON.stringify(propertyimageArray)}`);
+      // console.log(`fetchedWebflowImageURLs: ${fetchedWebflowImageURLs}`);
+
+      // const fetchedWebflowImageURLsJSON = JSON.stringify(fetchedWebflowImageURLs);
+      // consoleLogger.log(`fetchedWebflowImageURLsJSON: ${fetchedWebflowImageURLsJSON}`);
+
+      // Extract file names without file type declaration and after "_"
+      const propertyImageFileNames = extractFileNames(propertyimageArray);
+      const fetchedWebflowImageFileNames = extractFileNames(fetchedWebflowImageURLs);
+
+      consoleLogger.log(`propertyImageFileNames: ${propertyImageFileNames}`);
+      consoleLogger.log(`fetchedWebflowImageFileNames: ${fetchedWebflowImageFileNames}`);
+
+      // Compare the file names
+      if (JSON.stringify(propertyImageFileNames) !== JSON.stringify(fetchedWebflowImageFileNames)) {
+        consoleLogger.log('🖼️ File names have changed. Updating propertyimages and propertyimage fields.');
+
+        const fieldsToUpdateImages = {
+          propertyimages: createJsonArray(propertyimageArray),
+          propertyimage: { url: propertyimageArray[0] },
+        };
+
+        // Merge with existing fieldsToUpdate
+        Object.assign(fieldsToUpdate, fieldsToUpdateImages);
+
+        // consoleLogger.log('❗ Updating item with new images..', fieldsToUpdateImages.propertyimages);
+        // consoleLogger.log('❗ Updating item with new propertyimage:', fieldsToUpdateImages.propertyimage);
+        consoleLogger.log('❗ Updating item with new images..');
+        consoleLogger.log('❗ Updating item with new propertyimage...');
+      } else {
+        consoleLogger.log('✅ No changes in file names. Skipping image update.');
+      }
+
+
+      function createJsonArray() {
+        const jsonArray = [];
+
+        propertyimageArray.forEach((el) => {
+          string = '{ "url": "' + el + '" }';
+          obj = JSON.parse(string);
+          jsonArray.push(obj);
+        });
+
+        return jsonArray;
+      }
+      //
+      // UPDATE IMAGES - END
+
+      const preFieldsToUpdateLength = Object.keys(fieldsToUpdate).length;
+      // console.log(`preFieldsToUpdateLength: ${preFieldsToUpdateLength}`);
+
+      function createSlug(name) {
+        // Convert to lowercase and replace spaces with hyphens
+        let slug = name.toLowerCase().replace(/\s+/g, '-');
+      
+        // Remove non-alphanumeric characters
+        slug = slug.replace(/[^a-z0-9-]/g, '');
+      
+        return slug;
+      }
+
+      fieldsToUpdate.name = name;
+      fieldsToUpdate.slug = createSlug(name);
+      fieldsToUpdate._archived = false;
+      fieldsToUpdate._draft = false;
+
+      // Check if there are fields to update
+      if (preFieldsToUpdateLength > 0) {
+        webflow.updateItem({
+          collectionId: fetchedWebflowItem._cid,
+          itemId: fetchedWebflowItem._id,
+          fields: fieldsToUpdate,
+        });
+        consoleLogger.log(`✅ Updated item ${name} in collection ${createInWebflowCollection}`);
+      } else {
+        consoleLogger.log("✅ No fields to update.");
+      }
+
       consoleLogger.log("");
     } else {
       // ***** CONDITIONAL LOGIC to check if property is active. Import only if property is active! *****      
@@ -1101,7 +1292,7 @@ async function createListings(createInWebflowCollection) {
             _draft: false,
           },
         });
-        consoleLogger.log(`Created item ${name} in collection ${createInWebflowCollection}`);
+        consoleLogger.log(`✅ Created item ${name} in collection ${createInWebflowCollection}`);
         propertyLoopCounter++;
         consoleLogger.log(`Loop counter at: ${propertyLoopCounter}`);
         consoleLogger.log("");
@@ -1114,7 +1305,7 @@ async function createListings(createInWebflowCollection) {
       
     }
   } catch (err) {
-    consoleLogger.error(`Error - PROPERTIES_COLLECTION_ID: ${err}`);
+    consoleLogger.error(`⛔ Error - PROPERTIES_COLLECTION_ID: ${err}`);
   }
 }
 
@@ -1135,7 +1326,7 @@ async function createRegion(createInWebflowCollection) {
       consoleLogger.log(`Created region item ${name} in collection ${createInWebflowCollection}`);
     }
   } catch (err) {
-    consoleLogger.error(`Error - Problem creating listing: ${err}`);
+    consoleLogger.error(`⛔ Error - Problem creating listing: ${err}`);
   }
 }
 
@@ -1204,7 +1395,7 @@ async function createDistrict(createInWebflowCollection) {
       await createDistrictItem(createInWebflowCollection, RegionIDForDistrict);
     }
   } catch (err) {
-    consoleLogger.error(`Error - Problem creating listing: ${err}`);
+    consoleLogger.error(`⛔ Error - Problem creating listing: ${err}`);
   }
 }
 
@@ -1220,7 +1411,7 @@ async function createSuburb(createInWebflowCollection) {
       await createSuburbItem(createInWebflowCollection, DistrictIDForSuburb);
     }
   } catch (err) {
-    consoleLogger.error(`Error - Problem creating listing: ${err}`);
+    consoleLogger.error(`⛔ Error - Problem creating listing: ${err}`);
   }
 }
 
@@ -1256,7 +1447,7 @@ async function fullUpload() {
       }
     });
   } catch {
-    consoleLogger.error(`Error - Problem doing fullUpload(): ${err}`);
+    consoleLogger.error(`⛔ Error - Problem doing fullUpload(): ${err}`);
   }
 }
 
