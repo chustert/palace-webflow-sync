@@ -183,9 +183,10 @@ async function getPalaceListings() {
         propertyfeaturesamenities = property.PropertyFeatures.PropertyAmenities;
         propertyfeaturesbathroomsno = property.PropertyFeatures.PropertyBathroomsNo;
         propertyfeaturesbedroomsno = property.PropertyFeatures.PropertyBedroomsNo.trim();
-        propertyfeaturescarsno = modules.isInt(property.PropertyFeatures.PropertyCarsNo)
-          ? property.PropertyFeatures.PropertyCarsNo
-          : "";
+
+        // propertyfeaturescarsno = modules.isInt(property.PropertyFeatures.PropertyCarsNo) ? property.PropertyFeatures.PropertyCarsNo : "";
+        propertyfeaturescarsno = Number.isInteger(parseInt(property.PropertyFeatures.PropertyCarsNo.trim())) ? parseInt(property.PropertyFeatures.PropertyCarsNo.trim()).toString() : "";
+
         propertyfeaturesclass = property.PropertyFeatures.PropertyClass;
         propertyfeaturesensuitesno = property.PropertyFeatures.PropertyEnsuitesNo;
         propertyfeaturesfeaturedetails = property.PropertyFeatures.PropertyFeatureDetails;
@@ -1141,41 +1142,44 @@ async function createListings(createInWebflowCollection) {
         });
       }
 
-      // Extract URLs from fetchedWebflowItem.propertyimages
-      const fetchedWebflowImageURLs = fetchedWebflowItem.propertyimages.map(image => image.url);
+      // c=Check to ensure that fetchedWebflowItem.propertyimages is defined
+      if (fetchedWebflowItem.propertyimages) {
+        // Extract URLs from fetchedWebflowItem.propertyimages
+        const fetchedWebflowImageURLs = fetchedWebflowItem.propertyimages.map(image => image.url);
 
-      // Check if there are differences in images
-      // consoleLogger.log(`propertyimageArray: ${JSON.stringify(propertyimageArray)}`);
-      // console.log(`fetchedWebflowImageURLs: ${fetchedWebflowImageURLs}`);
+        // Check if there are differences in images
+        // consoleLogger.log(`propertyimageArray: ${JSON.stringify(propertyimageArray)}`);
+        // console.log(`fetchedWebflowImageURLs: ${fetchedWebflowImageURLs}`);
 
-      // const fetchedWebflowImageURLsJSON = JSON.stringify(fetchedWebflowImageURLs);
-      // consoleLogger.log(`fetchedWebflowImageURLsJSON: ${fetchedWebflowImageURLsJSON}`);
+        // const fetchedWebflowImageURLsJSON = JSON.stringify(fetchedWebflowImageURLs);
+        // consoleLogger.log(`fetchedWebflowImageURLsJSON: ${fetchedWebflowImageURLsJSON}`);
 
-      // Extract file names without file type declaration and after "_"
-      const propertyImageFileNames = extractFileNames(propertyimageArray);
-      const fetchedWebflowImageFileNames = extractFileNames(fetchedWebflowImageURLs);
+        // Extract file names without file type declaration and after "_"
+        const propertyImageFileNames = extractFileNames(propertyimageArray);
+        const fetchedWebflowImageFileNames = extractFileNames(fetchedWebflowImageURLs);
 
-      consoleLogger.log(`propertyImageFileNames: ${propertyImageFileNames}`);
-      consoleLogger.log(`fetchedWebflowImageFileNames: ${fetchedWebflowImageFileNames}`);
+        consoleLogger.log(`propertyImageFileNames: ${propertyImageFileNames}`);
+        consoleLogger.log(`fetchedWebflowImageFileNames: ${fetchedWebflowImageFileNames}`);
 
-      // Compare the file names
-      if (JSON.stringify(propertyImageFileNames) !== JSON.stringify(fetchedWebflowImageFileNames)) {
-        consoleLogger.log('🖼️ File names have changed. Updating propertyimages and propertyimage fields.');
+        // Compare the file names
+        if (JSON.stringify(propertyImageFileNames) !== JSON.stringify(fetchedWebflowImageFileNames)) {
+          consoleLogger.log('🖼️ File names have changed. Updating propertyimages and propertyimage fields.');
 
-        const fieldsToUpdateImages = {
-          propertyimages: createJsonArray(propertyimageArray),
-          propertyimage: { url: propertyimageArray[0] },
-        };
+          const fieldsToUpdateImages = {
+            propertyimages: createJsonArray(propertyimageArray),
+            propertyimage: { url: propertyimageArray[0] },
+          };
 
-        // Merge with existing fieldsToUpdate
-        Object.assign(fieldsToUpdate, fieldsToUpdateImages);
+          // Merge with existing fieldsToUpdate
+          Object.assign(fieldsToUpdate, fieldsToUpdateImages);
 
-        // consoleLogger.log('❗ Updating item with new images..', fieldsToUpdateImages.propertyimages);
-        // consoleLogger.log('❗ Updating item with new propertyimage:', fieldsToUpdateImages.propertyimage);
-        consoleLogger.log('❗ Updating item with new images..');
-        consoleLogger.log('❗ Updating item with new propertyimage...');
-      } else {
-        consoleLogger.log('✅ No changes in file names. Skipping image update.');
+          // consoleLogger.log('❗ Updating item with new images..', fieldsToUpdateImages.propertyimages);
+          // consoleLogger.log('❗ Updating item with new propertyimage:', fieldsToUpdateImages.propertyimage);
+          consoleLogger.log('❗ Updating item with new images..');
+          consoleLogger.log('❗ Updating item with new propertyimage...');
+        } else {
+          consoleLogger.log('✅ No changes in file names. Skipping image update.');
+        }
       }
 
 
